@@ -22,13 +22,13 @@ class FAProgressBar extends StatefulWidget {
     this.border,
     this.backgroundColor = const Color(0x00FFFFFF),
     this.progressColor = const Color(0xFFFA7268),
+    this.gradient,
     this.changeColorValue,
     this.changeProgressColor = const Color(0xFF5F4B8B),
     this.formatValue = _defaultFormatValue,
     this.formatValueFixed,
     this.displayText,
-    this.displayTextStyle =
-        const TextStyle(color: const Color(0xFFFFFFFF), fontSize: 12),
+    this.displayTextStyle = const TextStyle(color: const Color(0xFFFFFFFF), fontSize: 12),
   })  : _borderRadius = borderRadius ?? BorderRadius.circular(8),
         super(key: key);
   final double currentValue;
@@ -41,6 +41,7 @@ class FAProgressBar extends StatefulWidget {
   final BoxBorder? border;
   final Color backgroundColor;
   final Color progressColor;
+  final LinearGradient? gradient;
   final int? changeColorValue;
   final Color changeProgressColor;
   final String Function(double value, int? fixed) formatValue;
@@ -52,8 +53,7 @@ class FAProgressBar extends StatefulWidget {
   _FAProgressBarState createState() => _FAProgressBarState();
 }
 
-class _FAProgressBarState extends State<FAProgressBar>
-    with SingleTickerProviderStateMixin {
+class _FAProgressBarState extends State<FAProgressBar> with SingleTickerProviderStateMixin {
   late Animation<double> _animation;
   late AnimationController _controller;
   double _currentBegin = 0;
@@ -61,10 +61,8 @@ class _FAProgressBarState extends State<FAProgressBar>
 
   @override
   void initState() {
-    _controller =
-        AnimationController(duration: widget.animatedDuration, vsync: this);
-    _animation = Tween<double>(begin: _currentBegin, end: _currentEnd)
-        .animate(_controller);
+    _controller = AnimationController(duration: widget.animatedDuration, vsync: this);
+    _animation = Tween<double>(begin: _currentBegin, end: _currentEnd).animate(_controller);
     triggerAnimation();
     super.initState();
   }
@@ -85,8 +83,7 @@ class _FAProgressBarState extends State<FAProgressBar>
         _currentEnd = widget.currentValue / widget.maxValue;
       }
 
-      _animation = Tween<double>(begin: _currentBegin, end: _currentEnd)
-          .animate(_controller);
+      _animation = Tween<double>(begin: _currentBegin, end: _currentEnd).animate(_controller);
     });
     _controller.reset();
     _controller.duration = widget.animatedDuration;
@@ -139,13 +136,24 @@ class AnimatedProgressBar extends AnimatedWidget {
     }
 
     List<Widget> progressWidgets = [];
-    Widget progressWidget = Container(
-      decoration: BoxDecoration(
-        color: progressColor,
-        borderRadius: widget._borderRadius,
-        border: widget.border,
-      ),
-    );
+    Widget progressWidget;
+    if (widget.gradient == null) {
+      progressWidget = Container(
+        decoration: BoxDecoration(
+          color: progressColor,
+          borderRadius: widget._borderRadius,
+          border: widget.border,
+        ),
+      );
+    } else {
+      progressWidget = Container(
+        decoration: BoxDecoration(
+          gradient: widget.gradient,
+          borderRadius: widget._borderRadius,
+          border: widget.border,
+        ),
+      );
+    }
     progressWidgets.add(progressWidget);
 
     if (widget.displayText != null) {
@@ -156,9 +164,7 @@ class AnimatedProgressBar extends AnimatedWidget {
                 ? FractionalOffset(0.5, 0.05)
                 : FractionalOffset(0.5, 0.95)),
         child: Text(
-          widget.formatValue.call(
-                  animation.value * widget.maxValue, widget.formatValueFixed) +
-              widget.displayText!,
+          widget.formatValue.call(animation.value * widget.maxValue, widget.formatValueFixed) + widget.displayText!,
           softWrap: false,
           style: widget.displayTextStyle,
         ),
